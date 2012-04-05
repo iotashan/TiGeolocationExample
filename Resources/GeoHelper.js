@@ -38,6 +38,7 @@ var GeoHelper = function(_args) {
 		} else {
 			// ok, we have to turn on some battery-draining stuff
 			Ti.API.debug('starting to geolocate');
+			geoHelper.geolocating = true;
 			Ti.Geolocation.addEventListener('location',geoFound);
 			timeoutCall = setTimeout(function(){
 				Ti.API.debug('geolocation timed out, canceling');
@@ -52,6 +53,7 @@ var GeoHelper = function(_args) {
 	geoHelper.cancel = function(){
 		Ti.API.debug('bye bye geolocate');
 		Ti.Geolocation.removeEventListener('location',geoFound);
+		geoHelper.geolocating = false;
 		clearTimeout(timeoutCall);
 	};
 	
@@ -65,6 +67,7 @@ var GeoHelper = function(_args) {
 			if (geoHelper.lastPosition.coords.accuracy <= geoHelper.minAccuracy) {
 				clearTimeout(timeoutCall);
 				Ti.Geolocation.removeEventListener('location',geoFound);
+				geoHelper.geolocating = false;
 				Ti.API.debug('using fresh geolocation');
 				geoHelper.lastGoodPosition = geoHelper.lastPosition;
 				geoHelper.onSuccess(geoHelper.lastGoodPosition);
