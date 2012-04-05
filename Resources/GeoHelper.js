@@ -37,7 +37,7 @@ var GeoHelper = function(_args) {
 		// check to see if we can just recycle old data
 		if (lastGoodPosition && lastGoodPosition.coords.timestamp + geoHelper.maxAge*1000 >= new Date().getTime()) {
 			Ti.API.debug('using cached geolocation');
-			onSuccess(lastGoodPosition);
+			geoHelper.onSuccess(lastGoodPosition);
 		} else {
 			// ok, we have to turn on some battery-draining stuff
 			Ti.API.debug('starting to geolocate');
