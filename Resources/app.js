@@ -22,11 +22,14 @@ var debugBox = Ti.UI.createTextArea({
 	left:10,
 	right:10,
 	borderColor:'#000',
+	color:'#333',
 	font:{size:10},
 	editable:false,
 	value:'Log:\n',
 });
 win.add(debugBox);
+
+var updateCount = 0;
 
 var myGeoHelper = new GeoHelper({
 	onSuccess:function(e) {
@@ -42,6 +45,11 @@ var myGeoHelper = new GeoHelper({
 		waitDialog.hide();
 	},
 	onUpdate:function(e) {
+		// we don't show a waiting screen unless we turn on the radios
+		updateCount++;
+		if (updateCount === 1) {
+			waitDialog.show();
+		}
 		debugBox.value += 'Update: ' + JSON.stringify(e) + '\n';
 	},
 	purpose:'Geolocation Demo',
@@ -61,7 +69,6 @@ waitDialog.addEventListener('click',function(){
 });
 
 geoButton.addEventListener('click',function(){
-	waitDialog.show();
 	myGeoHelper.findPosition();
 });
 

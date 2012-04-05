@@ -6,16 +6,16 @@ var GeoHelper = function(_args) {
 	
 	// args proxy
 	geoHelper.onSuccess = _args.onSuccess;
+	geoHelper.onUpdate = _args.onUpdate;
 	geoHelper.onError = _args.onError;
 	geoHelper.purpose = _args.purpose ? _args.purpose : 'This message describes what you use geolocation services for.';
 	geoHelper.minAccuracy = _args.minAccuracy ? _args.minAccuracy : 100; // once we get within 100 meters, that's good enough 
 	geoHelper.timeout = _args.timeout ? _args.timeout : 30; // if you don't have what you need in 30 seconds, the user probably doesn't want to wait any more
 	geoHelper.maxAge = _args.maxAge ? _args.maxAge : 0; // if the last good position was withing [maxAge] seconds, don't bother turning on the radios
-	geoHelper.onUpdate = _args.onUpdate; // this callback is for debug purposes
 	
 	// data containers
-	var lastPosition;
-	var lastGoodPosition;
+	geoHelper.lastPosition;
+	geoHelper.lastGoodPosition;
 	var timeoutCall;
 	
 	// flags
@@ -26,18 +26,15 @@ var GeoHelper = function(_args) {
 			Ti.Geolocation.purpose = geoHelper.purpose;
 		}
 	}
-
-	if (osname == 'android') {
-		Ti.Geolocation.accuracy = Titanium.Geolocation.ACCURACY_HIGH;
-	} else {
-		Ti.Geolocation.accuracy = Titanium.Geolocation.ACCURACY_BEST;
-	}
+	
+	// this example requires Ti Mobile SDK 2.0.1 or newer 
+	Ti.Geolocation.accuracy = Titanium.Geolocation.ACCURACY_HIGH;
 	
 	geoHelper.findPosition = function(){
 		// check to see if we can just recycle old data
-		if (lastGoodPosition && lastGoodPosition.coords.timestamp + geoHelper.maxAge*1000 >= new Date().getTime()) {
+		if (geoHelper.lastGoodPosition && geoHelper.lastGoodPosition.coords.timestamp + geoHelper.maxAge*1000 >= new Date().getTime()) {
 			Ti.API.debug('using cached geolocation');
-			geoHelper.onSuccess(lastGoodPosition);
+			geoHelper.onSuccess(geoHelper.lastGoodPosition);
 		} else {
 			// ok, we have to turn on some battery-draining stuff
 			Ti.API.debug('starting to geolocate');
@@ -46,7 +43,7 @@ var GeoHelper = function(_args) {
 				Ti.API.debug('geolocation timed out, canceling');
 				geoHelper.cancel();
 				if (geoHelper.onError) {
-					geoHelper.onError(lastPosition);
+					geoHelper.onError(geoHelper.lastPosition);
 				}
 			},geoHelper.timeout*1000);
 		}
@@ -64,13 +61,13 @@ var GeoHelper = function(_args) {
 			geoHelper.onUpdate(_geo);
 		}
 		if (_geo.success) {
-			lastPosition = _geo;
-			if (lastPosition.coords.accuracy <= geoHelper.minAccuracy) {
+			geoHelper.lastPosition = _geo;
+			if (geoHelper.lastPosition.coords.accuracy <= geoHelper.minAccuracy) {
 				clearTimeout(timeoutCall);
 				Ti.Geolocation.removeEventListener('location',geoFound);
 				Ti.API.debug('using fresh geolocation');
-				lastGoodPosition = lastPosition;
-				geoHelper.onSuccess(lastGoodPosition);
+				geoHelper.lastGoodPosition = geoHelper.lastPosition;
+				geoHelper.onSuccess(geoHelper.lastGoodPosition);
 			}
 		}
 	};
