@@ -1,5 +1,7 @@
 var osname = Ti.Platform.osname;
 var osversion = parseFloat(Titanium.Platform.version);
+var lastPosition;
+var lastGoodPosition;
 
 var GeoHelper = function(_args) {
 	var geoHelper = {};
@@ -14,8 +16,6 @@ var GeoHelper = function(_args) {
 	geoHelper.maxAge = _args.maxAge ? _args.maxAge : 0; // if the last good position was withing [maxAge] seconds, don't bother turning on the radios
 	
 	// data containers
-	geoHelper.lastPosition;
-	geoHelper.lastGoodPosition;
 	var timeoutCall;
 	
 	// flags
@@ -32,9 +32,9 @@ var GeoHelper = function(_args) {
 	
 	geoHelper.findPosition = function(){
 		// check to see if we can just recycle old data
-		if (geoHelper.lastGoodPosition && geoHelper.lastGoodPosition.coords.timestamp + geoHelper.maxAge*1000 >= new Date().getTime()) {
+		if (lastGoodPosition && lastGoodPosition.coords.timestamp + geoHelper.maxAge*1000 >= new Date().getTime()) {
 			Ti.API.debug('using cached geolocation');
-			geoHelper.onSuccess(geoHelper.lastGoodPosition);
+			geoHelper.onSuccess(lastGoodPosition);
 		} else {
 			// ok, we have to turn on some battery-draining stuff
 			Ti.API.debug('starting to geolocate');
@@ -44,7 +44,7 @@ var GeoHelper = function(_args) {
 				Ti.API.debug('geolocation timed out, canceling');
 				geoHelper.cancel();
 				if (geoHelper.onError) {
-					geoHelper.onError(geoHelper.lastPosition);
+					geoHelper.onError(lastPosition);
 				}
 			},geoHelper.timeout*1000);
 		}
@@ -63,14 +63,14 @@ var GeoHelper = function(_args) {
 			geoHelper.onUpdate(_geo);
 		}
 		if (_geo.success) {
-			geoHelper.lastPosition = _geo;
-			if (geoHelper.lastPosition.coords.accuracy <= geoHelper.minAccuracy) {
+			lastPosition = _geo;
+			if (lastPosition.coords.accuracy <= geoHelper.minAccuracy) {
 				clearTimeout(timeoutCall);
 				Ti.Geolocation.removeEventListener('location',geoFound);
 				geoHelper.geolocating = false;
 				Ti.API.debug('using fresh geolocation');
-				geoHelper.lastGoodPosition = geoHelper.lastPosition;
-				geoHelper.onSuccess(geoHelper.lastGoodPosition);
+				lastGoodPosition = lastPosition;
+				geoHelper.onSuccess(lastGoodPosition);
 			}
 		}
 	};
@@ -79,17 +79,17 @@ var GeoHelper = function(_args) {
 	if (osname == 'android') {
 		Ti.Android.currentActivity.addEventListener('pause', function() {
 			if (geoHelper.geolocating) {
-				geoHelper.stopGeo();
+				geoHelper.cancel();
 			}
 		});
 		Ti.Android.currentActivity.addEventListener('stop', function() {
 			if (geoHelper.geolocating) {
-				geoHelper.stopGeo();
+				geoHelper.cancel();
 			}
 		});
 		Ti.Android.currentActivity.addEventListener('resume', function() {
 			if (geoHelper.geolocating) {
-				geoHelper.startGeo();
+				geoHelper.findPosition();
 			}
 		});
 	};

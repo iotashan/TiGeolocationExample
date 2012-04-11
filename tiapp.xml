@@ -7,7 +7,7 @@
         <target device="android">true</target>
         <target device="blackberry">false</target>
     </deployment-targets>
-    <sdk-version>2.0.0.v20120330103228</sdk-version>
+    <sdk-version>2.0.1.v20120410131722</sdk-version>
     <id>org.iotashan.GeolocationExample</id>
     <name>GeolocationExample</name>
     <version>1.0</version>
